@@ -1,19 +1,18 @@
 param (
     [string]$appName,
     [string]$mailboxName,
-    [string]$certFile,
-    [string]$groupName
+    [string]$certFile
 )
 
 function Show-Usage {
-    Write-Host "Usage: setupOAuth2.ps1 -appName <SMTP application name> -mailboxName <shared mailbox name> [-certFile <complete path to certificate file>] [-groupName <mail-enabled security group name>]"
-    Write-Host "Example: SetupEntra.ps1 -appName MySMTPApp -mailboxName shared@mail.com -certFile 'C:\path\to\cert.cer' -groupName MyMailEnabledGroup"
-exit 1
+    Write-Host "Usage: setupOAuth2.ps1 -appName <SMTP application name> -mailboxName <shared mailbox name> [-certFile <complete path to certificate file>] [-groupName <mail-enabled security group name>]"
+    Write-Host "Example: SetupEntra.ps1 -appName MySMTPApp -mailboxName shared@mail.com -certFile 'C:\path\to\cert.cer' -groupName MyMailEnabledGroup"
+    exit 1
 }
 
 # Manual check before prompting
 if (-not $PSBoundParameters.ContainsKey('appName') -or -not $PSBoundParameters.ContainsKey('mailboxName')) {
-    Show-Usage
+    Show-Usage
 }
 
 # -----------------------------------------------------------------------
@@ -186,23 +185,7 @@ Write-Output "Granting full access to shared mailbox $($mailboxName) for applica
 Add-MailboxPermission -Identity $mailboxName -User $appServicePrincipal.ObjectId -AccessRights FullAccess
 
 # -----------------------------------------------------------------------
-# Step 4 (opt): Assign DL members with SendAs permission on the mailbox
-# -----------------------------------------------------------------------
-
-if ($groupName) {    
-    # Write-Output "Assigning SendAs permission for members of the mail-enabled security group $($groupName) members to allow them sending an email from mailbox $($mailboxName)."
-    # Write-Output "Message will appear to have been sent from the security group member's mailbox."
-    # Add-RecipientPermission -Identity $groupName -AccessRights SendAs -Trustee $mailboxName -Confirm:$false
-
-    Write-Output "Assigning SendAs permission for user jdavis to allow sending an email from mailbox $($mailboxName)."    
-    Add-RecipientPermission -Identity "jdavis@bestruncorp.onmicrosoft.com" -AccessRights SendAs -Trustee $mailboxName -Confirm:$false
-
-    # Write-Output "Granting full access to the shared mailbox $($mailboxName) for the security group $($groupName)."
-    # Add-MailboxPermission -Identity $mailboxName -User $groupName -AccessRights FullAccess -InheritanceType All
-}
-
-# -----------------------------------------------------------------------
-# Step 5: Clean up and disconnect from Entra and Exchange Online  
+# Step 4: Clean up and disconnect from Entra and Exchange Online  
 # -----------------------------------------------------------------------
 
 Write-Output "Disconnecting from Entra ID tenant $($tenantId) as $($userName)."

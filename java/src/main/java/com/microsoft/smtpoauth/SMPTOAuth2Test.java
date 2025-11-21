@@ -34,15 +34,14 @@ public class SMPTOAuth2Test {
         options.addRequiredOption("c", "clientid", true, "client id");
         options.addRequiredOption("s", "clientSecret", true, "client secret");
         options.addRequiredOption("t", "tenant", true, "tenant id");
-        options.addRequiredOption("e", "email", true, "email");
-        options.addOption("sa", "sendAs", true, "send-as sender email");
+        options.addRequiredOption("m", "mailbox", true, "mailbox");        
         options.addOption("r", "recipient", true, "recipient email");
 
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine cmd = parser.parse(options, args);
-            String mailboxUserName = cmd.getOptionValue("e");
-            System.out.println("Trying to access mailbox for " + mailboxUserName);
+            String mailboxUserName = cmd.getOptionValue("m");
+            System.out.println("Trying to access mailbox " + mailboxUserName);
             
             String protocol = "smtp";
             Properties props = new Properties();
@@ -69,23 +68,22 @@ public class SMPTOAuth2Test {
             Transport transport = session.getTransport(protocol);
             transport.connect("smtp.office365.com", mailboxUserName, accessToken);            
             System.out.println("Successfully connected to SMTP server with OAuth2");
-
-            String sendAsEmail = cmd.getOptionValue("sa");
+            
             String recipientEmail = cmd.getOptionValue("r");
-            if (recipientEmail != null && sendAsEmail != null) {
+            if (recipientEmail != null) {
                 MimeMessage msg = new MimeMessage(session);
-                msg.setFrom(new InternetAddress(sendAsEmail));
+                msg.setFrom(new InternetAddress(mailboxUserName));
                 msg.setRecipient(RecipientType.TO, new InternetAddress(recipientEmail));
                 msg.setSubject("SMTP OAuth Mail Test");
                 msg.setText("Test Message Content");
                 transport.sendMessage(msg, msg.getAllRecipients());
-                System.out.println("Test message from " + sendAsEmail + " sent to " + recipientEmail);
+                System.out.println("Test message sent from " + mailboxUserName + " to " + recipientEmail);
             }
             
             transport.close();
         } catch (ParseException e) {
             System.out.println(
-                    "Wrong arguments. Usage: SMPTOAuth2Test -c <clientId> -s <clientSecret> -t <AAD tenant ID> -e <email account> [-r <recipient email>]");
+                    "Wrong arguments. Usage: SMPTOAuth2Test -c <clientId> -s <clientSecret> -t <AAD tenant ID> -m <mailbox> [-r <recipient email>]");
         } catch (MessagingException e) {
             e.printStackTrace();
         }
